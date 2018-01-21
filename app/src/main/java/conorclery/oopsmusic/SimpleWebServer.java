@@ -16,7 +16,10 @@
 
 package conorclery.oopsmusic;
 
+import android.app.Activity;
 import android.content.res.AssetManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
@@ -29,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -38,7 +42,7 @@ import java.net.SocketException;
  * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This
  * server handles one request at a time. It only supports GET method.
  */
-public class SimpleWebServer extends DisplayConnectionInfo implements Runnable {
+public class SimpleWebServer extends Activity implements Runnable {
 
     private static final String TAG = "SimpleWebServer";
 
@@ -62,12 +66,14 @@ public class SimpleWebServer extends DisplayConnectionInfo implements Runnable {
      */
     private ServerSocket mServerSocket;
 
+    private boolean requestRecv;
     /**
      * WebServer constructor.
      */
     public SimpleWebServer(int port, AssetManager assets) {
         mPort = port;
         mAssets = assets;
+        requestRecv = false;
     }
 
     /**
@@ -101,12 +107,11 @@ public class SimpleWebServer extends DisplayConnectionInfo implements Runnable {
     public void run() {
         try {
             mServerSocket = new ServerSocket(mPort);
-            int i = 0;
             while (mIsRunning) {
                 Socket socket = mServerSocket.accept();
+                requestRecv = true;
                 handle(socket);
                 socket.close();
-                i++;
             }
         } catch (SocketException e) {
             // The server was stopped; ignore.
@@ -114,6 +119,8 @@ public class SimpleWebServer extends DisplayConnectionInfo implements Runnable {
             Log.e(TAG, "Web server error.", e);
         }
     }
+
+
 
     /**
      * Respond to a request from a client.
@@ -242,8 +249,7 @@ public class SimpleWebServer extends DisplayConnectionInfo implements Runnable {
         }
     }
 
-    public String getFullAddress() {
-        return this.mServerSocket.toString();
+    public boolean isRequestRecv() {
+        return requestRecv;
     }
-
 }
